@@ -2691,7 +2691,7 @@ static int jbd2_journal_file_inode(handle_t *handle, struct jbd2_inode *jinode,
 		return -EROFS;
 	journal = transaction->t_journal;
 
-ifdef CONFIG_RSBAC
+#ifdef CONFIG_RSBAC
 	if (!jinode)
 		return 0;
 #endif
