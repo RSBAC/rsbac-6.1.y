@@ -1129,8 +1129,9 @@ static struct sock *unix_find_other(struct net *net,
 	return sk;
 }
 
-static int unix_autobind(struct sock *sk)
+static int unix_autobind(struct socket *sock)
 {
+	struct sock *sk = sock->sk;
 	struct unix_sock *u = unix_sk(sk);
 	unsigned int new_hash, old_hash;
 	struct net *net = sock_net(sk);
@@ -1364,7 +1365,7 @@ static int unix_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
 
 	if (addr_len == offsetof(struct sockaddr_un, sun_path) &&
 	    sunaddr->sun_family == AF_UNIX)
-		return unix_autobind(sk);
+		return unix_autobind(sock);
 
 	err = unix_validate_addr(sunaddr, addr_len);
 	if (err)
@@ -1372,7 +1373,7 @@ static int unix_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
 
 
 #ifdef CONFIG_RSBAC
-	if (!sun_path[0]) {
+	if (!sunaddr->sun_path[0]) {
 		rsbac_pr_debug(aef, "unix_bind() [sys_bind()]: calling ADF\n");
 		rsbac_target_id.ipc.type = I_anonunix;
 		if (   sock->file
@@ -1475,7 +1476,7 @@ static int unix_dgram_connect(struct socket *sock, struct sockaddr *addr,
 
 		if (test_bit(SOCK_PASSCRED, &sock->flags) &&
 		    !unix_sk(sk)->addr) {
-			err = unix_autobind(sk);
+			err = unix_autobind(sock);
 			if (err)
 				goto out;
 		}
@@ -1659,9 +1660,8 @@ static int unix_stream_connect(struct socket *sock, struct sockaddr *uaddr,
 	if (err)
 		goto out;
 
-
 	if (test_bit(SOCK_PASSCRED, &sock->flags) && !u->addr) {
-		err = unix_autobind(sk);
+		err = unix_autobind(sock);
 		if (err)
 			goto out;
 	}
@@ -2242,7 +2242,7 @@ static int unix_dgram_sendmsg(struct socket *sock, struct msghdr *msg,
 	}
 
 	if (test_bit(SOCK_PASSCRED, &sock->flags) && !u->addr) {
-		err = unix_autobind(sk);
+		err = unix_autobind(sock);
 		if (err)
 			goto out;
 	}
