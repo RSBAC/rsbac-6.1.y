@@ -113,6 +113,8 @@
 
 #include <kunit/test.h>
 
+#include <rsbac/hooks.h>
+
 static int kernel_init(void *);
 
 extern void init_IRQ(void);
@@ -1093,6 +1095,11 @@ asmlinkage __visible void __init __no_sanitize_address start_kernel(void)
 	security_init();
 	dbg_late_init();
 	net_ns_init();
+
+#ifdef CONFIG_RSBAC
+	rsbac_kthreads_init();
+#endif
+
 	vfs_caches_init();
 	pagecache_init();
 	signals_init();
