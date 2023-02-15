@@ -36,7 +36,6 @@
 
 #include "kallsyms_internal.h"
 
-
 /*
  * Expand a compressed symbol data into the resulting uncompressed string,
  * if uncompressed string is too long (>= maxlen), it will be truncated,
