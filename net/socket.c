@@ -1783,13 +1783,6 @@ static struct socket *__sys_socket_create(int family, int type, int protocol)
 	struct socket *sock;
 	int retval;
 
-#ifdef CONFIG_RSBAC
-	enum  rsbac_target_t rsbac_target = T_NONE;
-	union  rsbac_target_id_t rsbac_target_id;
-	union  rsbac_target_id_t rsbac_new_target_id;
-	union  rsbac_attribute_value_t rsbac_attribute_value;
-#endif
-
 	/* Check the SOCK_* constants for consistency.  */
 	BUILD_BUG_ON(SOCK_CLOEXEC != O_CLOEXEC);
 	BUILD_BUG_ON((SOCK_MAX | SOCK_TYPE_MASK) != SOCK_TYPE_MASK);
@@ -1827,6 +1820,14 @@ int __sys_socket(int family, int type, int protocol)
 {
 	struct socket *sock;
 	int flags;
+
+#ifdef CONFIG_RSBAC
+	int retval;
+	enum  rsbac_target_t rsbac_target = T_NONE;
+	union  rsbac_target_id_t rsbac_target_id;
+	union  rsbac_target_id_t rsbac_new_target_id;
+	union  rsbac_attribute_value_t rsbac_attribute_value;
+#endif
 
 	sock = __sys_socket_create(family, type, protocol);
 	if (IS_ERR(sock))
