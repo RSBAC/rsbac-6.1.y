@@ -91,6 +91,8 @@
 #include "smp.h"
 #include "stats.h"
 
+#include <rsbac/hooks.h>
+
 #include "../workqueue_internal.h"
 #include "../../io_uring/io-wq.h"
 #include "../smpboot.h"
@@ -7144,6 +7146,10 @@ int can_nice(const struct task_struct *p, const int nice)
 SYSCALL_DEFINE1(nice, int, increment)
 {
 	long nice, retval;
+#ifdef CONFIG_RSBAC
+	union rsbac_target_id_t rsbac_target_id;
+	union rsbac_attribute_value_t rsbac_attribute_value;
+#endif
 
 	/*
 	 * Setpriority might change our priority at the same moment.
@@ -7156,6 +7162,22 @@ SYSCALL_DEFINE1(nice, int, increment)
 	nice = clamp_val(nice, MIN_NICE, MAX_NICE);
 	if (increment < 0 && !can_nice(current, nice))
 		return -EPERM;
+
+#ifdef CONFIG_RSBAC
+	if (increment < 0) {
+		rsbac_pr_debug(aef, "calling ADF\n");
+		rsbac_target_id.scd = ST_priority;
+		rsbac_attribute_value.priority = nice;
+		if (!rsbac_adf_request(R_MODIFY_SYSTEM_DATA,
+					task_pid(current),
+					T_SCD,
+					rsbac_target_id,
+					A_priority,
+					rsbac_attribute_value)) {
+			return -EPERM;
+		}
+	}
+#endif
 
 	retval = security_task_setnice(current, nice);
 	if (retval)
@@ -7829,6 +7851,12 @@ do_sched_setscheduler(pid_t pid, int policy, struct sched_param __user *param)
 	struct task_struct *p;
 	int retval;
 
+#ifdef CONFIG_RSBAC
+	enum  rsbac_target_t rsbac_target;
+	union rsbac_target_id_t rsbac_target_id;
+	union rsbac_attribute_value_t rsbac_attribute_value;
+#endif
+
 	if (!param || pid < 0)
 		return -EINVAL;
 	if (copy_from_user(&lparam, param, sizeof(struct sched_param)))
@@ -7837,8 +7865,30 @@ do_sched_setscheduler(pid_t pid, int policy, struct sched_param __user *param)
 	rcu_read_lock();
 	retval = -ESRCH;
 	p = find_process_by_pid(pid);
-	if (likely(p))
+	if (likely(p)) {
 		get_task_struct(p);
+#ifdef CONFIG_RSBAC
+		rsbac_pr_debug(aef, "[sys_sched_setscheduler, sys_sched_setparam]: calling ADF\n");
+		if (!pid || (pid == current->pid)) {
+			rsbac_target = T_SCD;
+			rsbac_target_id.scd = ST_priority;
+		} else {
+			rsbac_target = T_PROCESS;
+			rsbac_target_id.process = task_pid(p);
+		}
+		rsbac_attribute_value.dummy = 0;
+		if (!rsbac_adf_request(R_MODIFY_SYSTEM_DATA,
+					task_pid(current),
+					rsbac_target,
+					rsbac_target_id,
+					A_none,
+					rsbac_attribute_value)) {
+			rcu_read_unlock();
+			return -EPERM;
+		}
+#endif
+
+	}
 	rcu_read_unlock();
 
 	if (likely(p)) {
@@ -7986,6 +8036,12 @@ SYSCALL_DEFINE1(sched_getscheduler, pid_t, pid)
 	struct task_struct *p;
 	int retval;
 
+#ifdef CONFIG_RSBAC
+        enum  rsbac_target_t rsbac_target;
+        union rsbac_target_id_t rsbac_target_id;
+        union rsbac_attribute_value_t rsbac_attribute_value;
+#endif
+
 	if (pid < 0)
 		return -EINVAL;
 
@@ -7994,6 +8050,29 @@ SYSCALL_DEFINE1(sched_getscheduler, pid_t, pid)
 	p = find_process_by_pid(pid);
 	if (p) {
 		retval = security_task_getscheduler(p);
+
+#ifdef CONFIG_RSBAC
+		if (!retval) {
+		        rsbac_pr_debug(aef, "[sys_sched_getscheduler]: calling ADF\n");
+		        if (!pid || (pid == current->pid)) {
+		                rsbac_target = T_SCD;
+		                rsbac_target_id.scd = ST_priority;
+		        } else {
+		                rsbac_target = T_PROCESS;
+		                rsbac_target_id.process = task_pid(p);
+		        }
+		        rsbac_attribute_value.dummy = 0;
+		        if (!rsbac_adf_request(R_GET_STATUS_DATA,
+		                                task_pid(current),
+		                                rsbac_target,
+		                                rsbac_target_id,
+		                                A_none,
+		                                rsbac_attribute_value)) {
+		                retval = -EPERM;
+		        }
+		}
+#endif
+
 		if (!retval)
 			retval = p->policy
 				| (p->sched_reset_on_fork ? SCHED_RESET_ON_FORK : 0);
@@ -8016,6 +8095,12 @@ SYSCALL_DEFINE2(sched_getparam, pid_t, pid, struct sched_param __user *, param)
 	struct task_struct *p;
 	int retval;
 
+#ifdef CONFIG_RSBAC
+        enum  rsbac_target_t rsbac_target;
+        union rsbac_target_id_t rsbac_target_id;
+        union rsbac_attribute_value_t rsbac_attribute_value;
+#endif
+
 	if (!param || pid < 0)
 		return -EINVAL;
 
@@ -8028,6 +8113,27 @@ SYSCALL_DEFINE2(sched_getparam, pid_t, pid, struct sched_param __user *, param)
 	retval = security_task_getscheduler(p);
 	if (retval)
 		goto out_unlock;
+
+#ifdef CONFIG_RSBAC
+	rsbac_pr_debug(aef, "[sys_sched_getparam]: calling ADF\n");
+	if (!pid || (pid == current->pid)) {
+		rsbac_target = T_SCD;
+		rsbac_target_id.scd = ST_priority;
+	} else {
+		rsbac_target = T_PROCESS;
+		rsbac_target_id.process = task_pid(p);
+	}
+	rsbac_attribute_value.dummy = 0;
+	if (!rsbac_adf_request(R_GET_STATUS_DATA,
+				task_pid(current),
+				rsbac_target,
+				rsbac_target_id,
+				A_none,
+				rsbac_attribute_value)) {
+		retval = -EPERM;
+		goto out_unlock;
+	}
+#endif
 
 	if (task_has_rt_policy(p))
 		lp.sched_priority = p->rt_priority;
@@ -8210,6 +8316,12 @@ long sched_setaffinity(pid_t pid, const struct cpumask *in_mask)
 	struct task_struct *p;
 	int retval;
 
+#ifdef CONFIG_RSBAC
+	enum  rsbac_target_t rsbac_target;
+	union rsbac_target_id_t rsbac_target_id;
+	union rsbac_attribute_value_t rsbac_attribute_value;
+#endif
+
 	rcu_read_lock();
 
 	p = find_process_by_pid(pid);
@@ -8241,6 +8353,26 @@ long sched_setaffinity(pid_t pid, const struct cpumask *in_mask)
 	if (retval)
 		goto out_put_task;
 
+#ifdef CONFIG_RSBAC
+	rsbac_pr_debug(aef, "[sys_sched_setaffinity]: calling ADF\n");
+	if (p == current) {
+		rsbac_target = T_SCD;
+		rsbac_target_id.scd = ST_priority;
+	} else {
+		rsbac_target = T_PROCESS;
+		rsbac_target_id.process = task_pid(p);
+	}
+	rsbac_attribute_value.dummy = 0;
+	if (!rsbac_adf_request(R_MODIFY_SYSTEM_DATA,
+				task_pid(current),
+				rsbac_target,
+				rsbac_target_id,
+				A_none,
+				rsbac_attribute_value)) {
+		retval = -EPERM;
+		goto out_put_task;
+	}
+#endif
 	retval = __sched_setaffinity(p, in_mask);
 out_put_task:
 	put_task_struct(p);
@@ -8271,6 +8403,31 @@ SYSCALL_DEFINE3(sched_setaffinity, pid_t, pid, unsigned int, len,
 {
 	cpumask_var_t new_mask;
 	int retval;
+#ifdef CONFIG_RSBAC
+	enum rsbac_target_t rsbac_target;
+	union rsbac_target_id_t rsbac_target_id;
+	union rsbac_attribute_value_t rsbac_attribute_value;
+#endif
+
+#ifdef CONFIG_RSBAC
+	rsbac_pr_debug(aef, "[sched_getaffinity]: calling ADF\n");
+	if (!pid || (pid == current->pid)) {
+		rsbac_target = T_SCD;
+		rsbac_target_id.scd = ST_priority;
+	} else {
+		rsbac_target = T_PROCESS;
+		rsbac_target_id.process = find_pid_ns(pid, &init_pid_ns);
+	}
+	rsbac_attribute_value.dummy = 0;
+	if (!rsbac_adf_request(R_GET_STATUS_DATA,
+				task_pid(current),
+				rsbac_target,
+				rsbac_target_id,
+				A_none,
+				rsbac_attribute_value)) {
+		return -EPERM;
+	}
+#endif
 
 	if (!alloc_cpumask_var(&new_mask, GFP_KERNEL))
 		return -ENOMEM;
@@ -8862,6 +9019,12 @@ static int sched_rr_get_interval(pid_t pid, struct timespec64 *t)
 	struct rq *rq;
 	int retval;
 
+#ifdef CONFIG_RSBAC
+	enum rsbac_target_t rsbac_target;
+        union rsbac_target_id_t rsbac_target_id;
+        union rsbac_attribute_value_t rsbac_attribute_value;
+#endif
+
 	if (pid < 0)
 		return -EINVAL;
 
@@ -8874,6 +9037,27 @@ static int sched_rr_get_interval(pid_t pid, struct timespec64 *t)
 	retval = security_task_getscheduler(p);
 	if (retval)
 		goto out_unlock;
+
+#ifdef CONFIG_RSBAC
+	rsbac_pr_debug(aef, "[sys_sched_rr_get_interval]: calling ADF\n");
+	if (!pid || (pid == current->pid)) {
+		rsbac_target = T_SCD;
+		rsbac_target_id.scd = ST_priority;
+	} else {
+		rsbac_target = T_PROCESS;
+		rsbac_target_id.process = task_pid(p);
+	}
+	rsbac_attribute_value.dummy = 0;
+	if (!rsbac_adf_request(R_GET_STATUS_DATA,
+				task_pid(current),
+				rsbac_target,
+				rsbac_target_id,
+				A_none,
+				rsbac_attribute_value)) {
+		retval = -EPERM;
+		goto out_unlock;
+	}
+#endif
 
 	rq = task_rq_lock(p, &rf);
 	time_slice = 0;
