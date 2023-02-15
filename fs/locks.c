@@ -2090,6 +2090,12 @@ SYSCALL_DEFINE2(flock, unsigned int, fd, unsigned int, cmd)
 	struct file_lock fl;
 	struct fd f;
 
+#ifdef CONFIG_RSBAC
+	enum  rsbac_target_t rsbac_target;
+	union rsbac_target_id_t rsbac_target_id;
+	union rsbac_attribute_value_t rsbac_attribute_value;
+#endif
+
 	/*
 	 * LOCK_MAND locks were broken for a long time in that they never
 	 * conflicted with one another and didn't prevent any sort of open,
@@ -2106,12 +2112,6 @@ SYSCALL_DEFINE2(flock, unsigned int, fd, unsigned int, cmd)
 	type = flock_translate_cmd(cmd & ~LOCK_NB);
 	if (type < 0)
 		return type;
-
-#ifdef CONFIG_RSBAC
-	enum  rsbac_target_t rsbac_target;
-	union rsbac_target_id_t rsbac_target_id;
-	union rsbac_attribute_value_t rsbac_attribute_value;
-#endif
 
 	error = -EBADF;
 	f = fdget(fd);
@@ -2164,7 +2164,7 @@ SYSCALL_DEFINE2(flock, unsigned int, fd, unsigned int, cmd)
 				A_none,
 				rsbac_attribute_value)) {
 		error = -EPERM;
-		goto out_free;
+		goto out_putf;
 	}
 #endif
 

@@ -827,7 +827,6 @@ void __noreturn do_exit(long code)
 
 	synchronize_group_exit(tsk, code);
 
-
 	WARN_ON(tsk->plug);
 
 	kcov_task_exit(tsk);
