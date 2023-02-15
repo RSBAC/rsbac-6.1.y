@@ -2120,6 +2120,12 @@ static int do_prlimit(struct task_struct *tsk, unsigned int resource,
 	struct rlimit *rlim;
 	int retval = 0;
 
+#ifdef CONFIG_RSBAC
+	union rsbac_target_id_t rsbac_target_id;
+	union rsbac_target_id_t rsbac_new_target_id;
+	union rsbac_attribute_value_t rsbac_attribute_value;
+#endif
+
 	if (resource >= RLIM_NLIMITS)
 		return -EINVAL;
 	resource = array_index_nospec(resource, RLIM_NLIMITS);
@@ -2145,6 +2151,23 @@ static int do_prlimit(struct task_struct *tsk, unsigned int resource,
 			retval = -EPERM;
 		if (!retval)
 			retval = security_task_setrlimit(tsk, resource, new_rlim);
+
+#ifdef CONFIG_RSBAC
+		if (!retval) {
+			rsbac_pr_debug(aef, "calling ADF\n");
+			rsbac_target_id.scd = ST_rlimit;
+			rsbac_attribute_value.rlimit.resource = resource;
+			rsbac_attribute_value.rlimit.limit = *new_rlim;
+			if (!rsbac_adf_request(R_MODIFY_SYSTEM_DATA,
+						task_pid(current),
+						T_SCD,
+						rsbac_target_id,
+						A_rlimit,
+						rsbac_attribute_value))
+				retval = -EPERM;
+		}
+#endif
+
 	}
 	if (!retval) {
 		if (old_rlim)
@@ -2153,6 +2176,23 @@ static int do_prlimit(struct task_struct *tsk, unsigned int resource,
 			*rlim = *new_rlim;
 	}
 	task_unlock(tsk->group_leader);
+
+#ifdef CONFIG_RSBAC
+	if (!retval) {
+		rsbac_new_target_id.dummy = 0;
+		if (unlikely(rsbac_adf_set_attr(R_MODIFY_SYSTEM_DATA,
+					task_pid(current),
+					T_SCD,
+					rsbac_target_id,
+					T_NONE,
+					rsbac_new_target_id,
+					A_rlimit,
+					rsbac_attribute_value))) {
+			rsbac_printk(KERN_WARNING
+					"sys_setrlimit(): rsbac_adf_set_attr() returned error");
+		}
+	}
+#endif
 
 	/*
 	 * RLIMIT_CPU handling. Arm the posix CPU timer if the limit is not
@@ -2320,44 +2360,6 @@ static void rlim64_to_rlim(const struct rlimit64 *rlim64, struct rlimit *rlim)
 		rlim->rlim_max = (unsigned long)rlim64->rlim_max;
 }
 
-#ifdef CONFIG_RSBAC
-	union rsbac_target_id_t rsbac_target_id;
-	union rsbac_target_id_t rsbac_new_target_id;
-	union rsbac_attribute_value_t rsbac_attribute_value;
-#endif
-
-
-#ifdef CONFIG_RSBAC
-		if (!retval) {
-			rsbac_pr_debug(aef, "calling ADF\n");
-			rsbac_target_id.scd = ST_rlimit;
-			rsbac_attribute_value.rlimit.resource = resource;
-			rsbac_attribute_value.rlimit.limit = *new_rlim;
-			if (!rsbac_adf_request(R_MODIFY_SYSTEM_DATA,
-						task_pid(current),
-						T_SCD,
-						rsbac_target_id,
-						A_rlimit,
-						rsbac_attribute_value))
-				retval = -EPERM;
-		}
-#endif
-
-
-#ifdef CONFIG_RSBAC
-	rsbac_new_target_id.dummy = 0;
-	if (unlikely(rsbac_adf_set_attr(R_MODIFY_SYSTEM_DATA,
-				task_pid(current),
-				T_SCD,
-				rsbac_target_id,
-				T_NONE,
-				rsbac_new_target_id,
-				A_rlimit,
-				rsbac_attribute_value))) {
-		rsbac_printk(KERN_WARNING
-				"sys_setrlimit(): rsbac_adf_set_attr() returned error");
-	}
-#endif
 /* rcu lock must be held */
 static int check_prlimit_permission(struct task_struct *task,
 				    unsigned int flags)
