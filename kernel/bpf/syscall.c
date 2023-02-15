@@ -37,6 +37,7 @@
 #include <linux/trace_events.h>
 #include <linux/cookie.h>
 
+#include <rsbac/hooks.h>
 #define IS_FD_ARRAY(map) ((map)->map_type == BPF_MAP_TYPE_PERF_EVENT_ARRAY || \
 			  (map)->map_type == BPF_MAP_TYPE_CGROUP_ARRAY || \
 			  (map)->map_type == BPF_MAP_TYPE_ARRAY_OF_MAPS)
@@ -4981,6 +4982,12 @@ static int __sys_bpf(int cmd, bpfptr_t uattr, unsigned int size)
 	bool capable;
 	int err;
 
+#ifdef CONFIG_RSBAC_NET
+	enum  rsbac_adf_request_t     rsbac_adf_req;
+	union rsbac_target_id_t       rsbac_target_id;
+	union rsbac_attribute_value_t rsbac_attribute_value;
+#endif
+
 	capable = bpf_capable() || !sysctl_unprivileged_bpf_disabled;
 
 	/* Intent here is for unprivileged_bpf_disabled to block key object
@@ -5008,6 +5015,29 @@ static int __sys_bpf(int cmd, bpfptr_t uattr, unsigned int size)
 	err = security_bpf(cmd, &attr, size);
 	if (err < 0)
 		return err;
+
+#ifdef CONFIG_RSBAC_NET
+	switch (cmd) {
+		case BPF_MAP_LOOKUP_ELEM:
+		case BPF_MAP_GET_NEXT_KEY:
+			rsbac_adf_req = R_GET_STATUS_DATA;
+			break;
+		default:
+			rsbac_adf_req = R_MODIFY_SYSTEM_DATA;
+			break;
+	}
+	rsbac_pr_debug(aef, "calling ADF\n");
+	rsbac_target_id.scd = ST_bpf;
+	rsbac_attribute_value.dummy = 0;
+	if (!rsbac_adf_request(rsbac_adf_req,
+				task_pid(current),
+				T_SCD,
+				rsbac_target_id,
+				A_none,
+				rsbac_attribute_value)) {
+		return -EPERM;
+	}
+#endif
 
 	switch (cmd) {
 	case BPF_MAP_CREATE:
