@@ -23,3 +23,10 @@
 ALIGN
 ENTRY(sys_call_table)
 #include <asm/syscall_table.h>
+#ifdef CONFIG_RSBAC
+	/* we use 400, until sys_security gets defined here */
+	.rept 399-379
+		.long sys_ni_syscall
+	.endr
+	.long sys_rsbac
+#endif
