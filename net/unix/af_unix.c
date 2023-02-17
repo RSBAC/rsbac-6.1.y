@@ -1890,11 +1890,11 @@ restart:
 		    && newsk->sk_socket
 		    && other->sk_socket
 		   ) {
-			rsbac_printk("unix_stream_connect() [sys_connect()]: connected from %u to %u (type %u), orig %u\n",
-			sk->sk_socket->file->f_path.dentry->d_inode->i_ino,
-			newsk->sk_socket->file->f_path.dentry->d_inode->i_ino,
-			rsbac_target,
-			other->sk_socket->file->f_path.dentry->d_inode->i_ino);
+			rsbac_printk(KERN_DEBUG "unix_stream_connect() [sys_connect()]: connected from %u to %u (type %u), orig %u\n",
+				sk->sk_socket->file->f_path.dentry->d_inode->i_ino,
+				newsk->sk_socket->file->f_path.dentry->d_inode->i_ino,
+				rsbac_target,
+				other->sk_socket->file->f_path.dentry->d_inode->i_ino);
 		}
 #endif
 #endif

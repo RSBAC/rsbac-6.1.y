@@ -4,9 +4,9 @@
 /* Facility (ADF) - Role Compatibility               */
 /* File: rsbac/adf/rc/main.c                         */
 /*                                                   */
-/* Author and (c) 1999-2022: Amon Ott <ao@rsbac.org> */
+/* Author and (c) 1999-2023: Amon Ott <ao@rsbac.org> */
 /*                                                   */
-/* Last modified: 25/Mar/2022                        */
+/* Last modified: 17/Feb/2023                        */
 /*************************************************** */
 
 #include <linux/string.h>
@@ -2921,7 +2921,7 @@ inline int rsbac_adf_set_attr_rc(enum rsbac_adf_request_t request,
 						         i_tid, A_rc_select_type,
 						         i_attr_val1)))
 				{
-					rsbac_printk("rsbac_adf_set_attr_rc(): unable to reset rc_select_type to default value!\n");
+					rsbac_printk(KERN_WARNING "rsbac_adf_set_attr_rc(): unable to reset rc_select_type to default value!\n");
 				}
 				if ((err = rsbac_set_attr(SW_RC, new_target,
 							  new_tid, A_rc_type_fd,
