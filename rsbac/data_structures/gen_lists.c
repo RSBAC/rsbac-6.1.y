@@ -5114,9 +5114,7 @@ static int do_read_lol_list(struct rsbac_list_lol_reg_item_t *list,
 							    (list, item_p, max_age,
 							     new_subbuf,
 							     new_subdata)) {
-								rsbac_printk
-								    (KERN_WARNING
-								     "do_read_lol_list(): could not add subitem!\n");
+								rsbac_printk(KERN_WARNING "do_read_lol_list(): could not add subitem!\n");
 								i = sublen;
 								tmperr = -1;
 							}
