@@ -37,6 +37,8 @@
 #include <linux/spinlock.h>
 #include <uapi/linux/loop.h>
 
+#include <rsbac/hooks.h>
+
 /* Possible states of device */
 enum {
 	Lo_unbound,
@@ -88,8 +90,6 @@ struct loop_cmd {
 	struct cgroup_subsys_state *blkcg_css;
 	struct cgroup_subsys_state *memcg_css;
 };
-
-#include <rsbac/hooks.h>
 
 #define LOOP_IDLE_WORKER_TIMEOUT (60 * HZ)
 #define LOOP_DEFAULT_HW_Q_DEPTH (128)
