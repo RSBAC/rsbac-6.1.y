@@ -31,14 +31,14 @@
 #include <linux/uaccess.h>
 #include <linux/security.h>
 
+#include <rsbac/hooks.h>
+
 #ifdef CONFIG_IA64
 # include <linux/efi.h>
 #endif
 
 #define DEVMEM_MINOR	1
 #define DEVPORT_MINOR	4
-
-#include <rsbac/hooks.h>
 
 static inline unsigned long size_inside_page(unsigned long start,
 					     unsigned long size)
@@ -181,7 +181,8 @@ static ssize_t read_mem(struct file *file, char __user *buf,
 						rsbac_attribute_value)) {
 				rsbac_printk(KERN_INFO "read_mem(): RSBAC denied read access to kernel mem page %u, size %u\n",
 						rsbac_attribute_value.pagenr, count);
-				return -EPERM;
+				err = -EPERM;
+				goto failed;
 			}
 #endif
 
