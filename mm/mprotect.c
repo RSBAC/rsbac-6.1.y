@@ -811,11 +811,11 @@ static int do_mprotect_pkey(unsigned long start, size_t len,
 						  A_prot_bits,
 						  rsbac_attribute_value))
 			{
-				rsbac_pr_debug(aef, "request NOT_GRANTED\n");
 				error = -EPERM;
-				goto out;
-			} else
+				break;
+			} else {
 			  need_notify = TRUE;
+			}
 		}
 #ifdef CONFIG_RSBAC_MPROTECT
 		if (   (   ((prot & PROT_EXEC) && !(vma->vm_flags & PROT_EXEC))
@@ -853,7 +853,7 @@ static int do_mprotect_pkey(unsigned long start, size_t len,
 				if (program_name)
 					rsbac_kfree(program_name);
 				error = -EPERM;
-				goto out;
+				break;
 			}
 			if ((prot & PROT_EXEC) && (newflags & VM_MAYWRITE)) {
 #ifdef CONFIG_RSBAC_DEBUG
