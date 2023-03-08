@@ -34,6 +34,7 @@
 #include <linux/minmax.h>
 
 #include <asm/syscall.h>	/* for syscall_get_* */
+
 #include <rsbac/hooks.h>
 
 /*

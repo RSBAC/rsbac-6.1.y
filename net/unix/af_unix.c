@@ -117,6 +117,7 @@
 #include <linux/btf_ids.h>
 
 #include <rsbac/hooks.h>
+
 static atomic_long_t unix_nr_socks;
 static struct hlist_head bsd_socket_buckets[UNIX_HASH_SIZE / 2];
 static spinlock_t bsd_socket_locks[UNIX_HASH_SIZE / 2];
@@ -1399,7 +1400,6 @@ static int unix_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
 			init_peercred(sk);
 	}
 #endif
-
 
 	if (sunaddr->sun_path[0])
 		err = unix_bind_bsd(sk, sunaddr, addr_len);
