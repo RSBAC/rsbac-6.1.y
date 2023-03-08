@@ -2899,6 +2899,8 @@ static int do_remount(struct path *path, int ms_flags, int sb_flags,
 					rsbac_target_id,
 					A_mode,
 					rsbac_attribute_value)) {
+			mnt_warn_timestamp_expiry(path, &mnt->mnt);
+			put_fs_context(fc);
 			return -EPERM;
 		}
 		rsbac_pr_debug(aef, "[do_mount() [sys_mount()]]: calling ADF for DEV\n");
@@ -2911,6 +2913,8 @@ static int do_remount(struct path *path, int ms_flags, int sb_flags,
 					rsbac_target_id,
 					A_mode,
 					rsbac_attribute_value)) {
+			mnt_warn_timestamp_expiry(path, &mnt->mnt);
+			put_fs_context(fc);
 			return -EPERM;
 		}
 #endif
