@@ -32,9 +32,9 @@
 #include <net/pkt_sched.h>
 #include <net/pkt_cls.h>
 
-#include <rsbac/hooks.h>
-
 #include <trace/events/qdisc.h>
+
+#include <rsbac/hooks.h>
 
 /*
 
