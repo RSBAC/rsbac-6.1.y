@@ -4,11 +4,11 @@
 /* Facility (ADF) - Mandatory Access Control         */
 /* File: rsbac/adf/mac/main.c                        */
 /*                                                   */
-/* Author and (c) 1999-2019: Amon Ott <ao@rsbac.org> */
+/* Author and (c) 1999-2023: Amon Ott <ao@rsbac.org> */
 /* MAC_LIGHT Modifications (c) 2000 Stanislav Ievlev */
 /*                     and (c) 2001 Amon Ott         */
 /*                                                   */
-/* Last modified: 03/Dec/2019                        */
+/* Last modified: 31/Mar/2023                        */
 /*************************************************** */
 
 #include <linux/string.h>
@@ -2663,6 +2663,13 @@ rsbac_adf_request_mac(enum rsbac_adf_request_t request,
 			return (auto_write(caller_pid,
 					   target, tid, FALSE));
 			break;
+
+		case T_DEV:
+			if (tid.dev.type == D_block)
+				return mac_check_role(owner,
+						      SR_administrator);
+			else
+				return DO_NOT_CARE;
 
 		case T_SCD:
 #ifdef CONFIG_RSBAC_USER_MOD_IOPERM
