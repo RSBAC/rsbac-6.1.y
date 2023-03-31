@@ -1256,6 +1256,7 @@ static long __ext4_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		case EXT4_IOC_GET_ES_CACHE:
 		case FS_IOC_MEASURE_VERITY:
 		case FS_IOC_READ_VERITY_METADATA:
+		case FITRIM:
 			rsbac_request = R_GET_PERMISSIONS_DATA;
 			break;
 		case FS_IOC_SETFLAGS:
@@ -1269,7 +1270,6 @@ static long __ext4_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		case EXT4_IOC_ALLOC_DA_BLKS:
 		case EXT4_IOC_SWAP_BOOT:
 		case EXT4_IOC_RESIZE_FS:
-		case FITRIM:
 		case EXT4_IOC_PRECACHE_EXTENTS:
 		case FS_IOC_SET_ENCRYPTION_POLICY:
 		case FS_IOC_GET_ENCRYPTION_PWSALT:
@@ -1306,17 +1306,10 @@ static long __ext4_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 #endif
 		}
 	else {
-		if (S_ISDIR(inode->i_mode))
-			rsbac_target = T_DIR;
-		else if (S_ISFIFO(inode->i_mode))
-			rsbac_target = T_FIFO;
-		else if (S_ISLNK(inode->i_mode))
-			rsbac_target = T_SYMLINK;
-		else
-			rsbac_target = T_FILE;
-		rsbac_target_id.file.device = filp->f_path.dentry->d_sb->s_dev;
-		rsbac_target_id.file.inode  = inode->i_ino;
-		rsbac_target_id.file.dentry_p = filp->f_path.dentry;
+		rsbac_target = T_DEV;
+		rsbac_target_id.dev.type = D_block;
+		rsbac_target_id.dev.major = RSBAC_MAJOR(filp->f_path.dentry->d_sb->s_dev);
+		rsbac_target_id.dev.minor = RSBAC_MINOR(filp->f_path.dentry->d_sb->s_dev);
 	}
 	rsbac_attribute_value.ioctl_cmd = cmd;
 	if(   (rsbac_request != R_NONE)
