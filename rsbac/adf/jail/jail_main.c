@@ -4,9 +4,9 @@
 /* Facility (ADF) - Authorization module              */
 /* File: rsbac/adf/jail/jail_main.c                   */
 /*                                                    */
-/* Author and (c) 1999-2017: Amon Ott <ao@rsbac.org>  */
+/* Author and (c) 1999-2023: Amon Ott <ao@rsbac.org>  */
 /*                                                    */
-/* Last modified: 28/Feb/2017                         */
+/* Last modified: 31/Mar/2023                         */
 /**************************************************** */
 
 #include <linux/string.h>
@@ -391,8 +391,26 @@ rsbac_adf_request_jail(enum rsbac_adf_request_t request,
 				return NOT_GRANTED;
 			else
 				return GRANTED;
+		case R_GET_PERMISSIONS_DATA:
+			if (tid.dev.type == D_block
+			    && jail_get_id_process(caller_pid)
+			    && !(jail_get_flags_process(caller_pid) &
+				 JAIL_allow_dev_get_status)
+			    )
+				return NOT_GRANTED;
+			else
+				return GRANTED;
 		case R_MODIFY_SYSTEM_DATA:
 			if (jail_get_id_process(caller_pid)
+			    && !(jail_get_flags_process(caller_pid) &
+				 JAIL_allow_dev_mod_system)
+			    )
+				return NOT_GRANTED;
+			else
+				return GRANTED;
+		case R_MODIFY_PERMISSIONS_DATA:
+			if (tid.dev.type == D_block
+			    && jail_get_id_process(caller_pid)
 			    && !(jail_get_flags_process(caller_pid) &
 				 JAIL_allow_dev_mod_system)
 			    )
