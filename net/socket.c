@@ -2405,8 +2405,6 @@ struct file *do_accept(struct file *file, unsigned file_flags,
 				rsbac_attribute_value)) {
 		rsbac_pr_debug(aef, "[sys_socketcall()]: ADF returned NOT_GRANTED\n");
 		err = -EPERM;
-		if (rsbac_attribute == A_process)
-			put_pid(rsbac_attribute_value.process);
 		goto out_fd;
 	}
 #endif
@@ -2449,6 +2447,12 @@ struct file *do_accept(struct file *file, unsigned file_flags,
 	/* File flags are not inherited via accept() unlike another OSes. */
 	return newfile;
 out_fd:
+
+#ifdef CONFIG_RSBAC
+	if (rsbac_attribute == A_process)
+		put_pid(rsbac_attribute_value.process);
+#endif
+
 	fput(newfile);
 	return ERR_PTR(err);
 }
