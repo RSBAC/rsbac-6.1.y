@@ -1034,6 +1034,48 @@ long __sys_setresuid(uid_t ruid, uid_t euid, uid_t suid)
 
 	old = current_cred();
 
+#ifdef CONFIG_RSBAC
+	rsbac_old_uid = __kuid_val(old->uid);
+	rsbac_target_id.process = task_pid(current);
+	if(ruid != (uid_t) -1) {
+		rsbac_pr_debug(aef, "calling ADF\n");
+		rsbac_attribute_value.long_dummy = 0;
+		rsbac_attribute_value.owner = RSBAC_GEN_UID(RSBAC_UM_VIRTUAL_KEEP, ruid);
+		if(!rsbac_adf_request(R_CHANGE_OWNER,
+					task_pid(current),
+					T_PROCESS,
+					rsbac_target_id,
+					A_owner,
+					rsbac_attribute_value)) {
+			return -EPERM;
+		}
+	}
+#ifdef CONFIG_RSBAC_DAC_OWNER
+	if(euid != (uid_t) -1) {
+		rsbac_pr_debug(aef, "calling ADF for euid\n");
+		rsbac_attribute_value.long_dummy = 0;
+		rsbac_attribute_value.owner = RSBAC_GEN_UID(RSBAC_UM_VIRTUAL_KEEP, euid);
+		if(!rsbac_adf_request(R_CHANGE_DAC_EFF_OWNER,
+					task_pid(current),
+					T_PROCESS,
+					rsbac_target_id,
+					A_owner,
+					rsbac_attribute_value)) {
+			return -EPERM;
+		}
+		rsbac_pr_debug(aef, "calling ADF for fsuid\n");
+		if(!rsbac_adf_request(R_CHANGE_DAC_FS_OWNER,
+					task_pid(current),
+					T_PROCESS,
+					rsbac_target_id,
+					A_owner,
+					rsbac_attribute_value)) {
+			return -EPERM;
+		}
+	}
+#endif
+#endif
+
 	/* check for no-op */
 	if ((ruid == (uid_t) -1 || uid_eq(kruid, old->uid)) &&
 	    (euid == (uid_t) -1 || (uid_eq(keuid, old->euid) &&
@@ -1072,51 +1114,6 @@ long __sys_setresuid(uid_t ruid, uid_t euid, uid_t suid)
 	retval = security_task_fix_setuid(new, old, LSM_SETID_RES);
 	if (retval < 0)
 		goto error;
-
-#ifdef CONFIG_RSBAC
-	rsbac_old_uid = __kuid_val(old->uid);
-	rsbac_target_id.process = task_pid(current);
-	if(ruid != (uid_t) -1) {
-		rsbac_pr_debug(aef, "calling ADF\n");
-		rsbac_attribute_value.long_dummy = 0;
-		rsbac_attribute_value.owner = RSBAC_GEN_UID(RSBAC_UM_VIRTUAL_KEEP, ruid);
-		if(!rsbac_adf_request(R_CHANGE_OWNER,
-					task_pid(current),
-					T_PROCESS,
-					rsbac_target_id,
-					A_owner,
-					rsbac_attribute_value)) {
-			retval = -EPERM;
-			goto error;
-		}
-	}
-#ifdef CONFIG_RSBAC_DAC_OWNER
-	if(euid != (uid_t) -1) {
-		rsbac_pr_debug(aef, "calling ADF for euid\n");
-		rsbac_attribute_value.long_dummy = 0;
-		rsbac_attribute_value.owner = RSBAC_GEN_UID(RSBAC_UM_VIRTUAL_KEEP, euid);
-		if(!rsbac_adf_request(R_CHANGE_DAC_EFF_OWNER,
-					task_pid(current),
-					T_PROCESS,
-					rsbac_target_id,
-					A_owner,
-					rsbac_attribute_value)) {
-			retval = -EPERM;
-			goto error;
-		}
-		rsbac_pr_debug(aef, "calling ADF for fsuid\n");
-		if(!rsbac_adf_request(R_CHANGE_DAC_FS_OWNER,
-					task_pid(current),
-					T_PROCESS,
-					rsbac_target_id,
-					A_owner,
-					rsbac_attribute_value)) {
-			retval = -EPERM;
-			goto error;
-		}
-	}
-#endif
-#endif
 
 	retval = set_cred_ucounts(new);
 	if (retval < 0)
@@ -1235,6 +1232,40 @@ long __sys_setresgid(gid_t rgid, gid_t egid, gid_t sgid)
 
 	old = current_cred();
 
+#ifdef CONFIG_RSBAC
+	rsbac_pr_debug(aef, "calling ADF\n");
+	rsbac_target_id.process = task_pid(current);
+	if (rgid != (gid_t) -1) {
+		rsbac_attribute_value.group = RSBAC_GEN_GID(RSBAC_UM_VIRTUAL_KEEP, rgid);
+		if (!rsbac_adf_request(R_CHANGE_GROUP,
+				task_pid(current),
+				T_PROCESS,
+				rsbac_target_id,
+				A_group,
+				rsbac_attribute_value))
+			return -EPERM;
+	}
+#ifdef CONFIG_RSBAC_DAC_GROUP
+	if (egid != (gid_t) -1) {
+		rsbac_attribute_value.group = RSBAC_GEN_GID(RSBAC_UM_VIRTUAL_KEEP, egid);
+		if (!rsbac_adf_request(R_CHANGE_DAC_EFF_GROUP,
+				task_pid(current),
+				T_PROCESS,
+				rsbac_target_id,
+				A_group,
+				rsbac_attribute_value))
+			return -EPERM;
+		if (!rsbac_adf_request(R_CHANGE_DAC_FS_GROUP,
+				task_pid(current),
+				T_PROCESS,
+				rsbac_target_id,
+				A_group,
+				rsbac_attribute_value))
+			return -EPERM;;
+	}
+#endif
+#endif
+
 	/* check for no-op */
 	if ((rgid == (gid_t) -1 || gid_eq(krgid, old->gid)) &&
 	    (egid == (gid_t) -1 || (gid_eq(kegid, old->egid) &&
@@ -1255,43 +1286,6 @@ long __sys_setresgid(gid_t rgid, gid_t egid, gid_t sgid)
 	new = prepare_creds();
 	if (!new)
 		return -ENOMEM;
-#ifdef CONFIG_RSBAC
-	rsbac_pr_debug(aef, "calling ADF\n");
-	rsbac_target_id.process = task_pid(current);
-#endif
-
-
-#ifdef CONFIG_RSBAC
-	if (rgid != (gid_t) -1) {
-		rsbac_attribute_value.group = RSBAC_GEN_GID(RSBAC_UM_VIRTUAL_KEEP, rgid);
-		if (!rsbac_adf_request(R_CHANGE_GROUP,
-				task_pid(current),
-				T_PROCESS,
-				rsbac_target_id,
-				A_group,
-				rsbac_attribute_value))
-			goto error;
-	}
-#ifdef CONFIG_RSBAC_DAC_GROUP
-	if (egid != (gid_t) -1) {
-		rsbac_attribute_value.group = RSBAC_GEN_GID(RSBAC_UM_VIRTUAL_KEEP, egid);
-		if (!rsbac_adf_request(R_CHANGE_DAC_EFF_GROUP,
-				task_pid(current),
-				T_PROCESS,
-				rsbac_target_id,
-				A_group,
-				rsbac_attribute_value))
-			goto error;
-		if (!rsbac_adf_request(R_CHANGE_DAC_FS_GROUP,
-				task_pid(current),
-				T_PROCESS,
-				rsbac_target_id,
-				A_group,
-				rsbac_attribute_value))
-			goto error;
-	}
-#endif
-#endif
 
 	if (rgid != (gid_t) -1)
 		new->gid = krgid;
