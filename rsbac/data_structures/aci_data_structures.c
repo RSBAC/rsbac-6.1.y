@@ -1,11 +1,11 @@
 /*************************************************** */
 /* Rule Set Based Access Control                     */
 /* Implementation of ACI data structures             */
-/* Author and (c) 1999-2021: Amon Ott <ao@rsbac.org> */
+/* Author and (c) 1999-2023: Amon Ott <ao@rsbac.org> */
 /* (some smaller parts copied from fs/namei.c        */
 /*  and others)                                      */
 /*                                                   */
-/* Last modified: 03/Dec/2021                        */
+/* Last modified: 21/Jul/2023                        */
 /*************************************************** */
 
 #include <linux/types.h>
@@ -6840,8 +6840,8 @@ static int rsbacd(void *dummy)
 			rsbac_check_lists(1);
 		}
 #endif
-		/* Write lists */
-		if (rsbac_initialized && !rsbac_debug_no_write) {
+		/* Trigger rehashing and writing of lists */
+		if (rsbac_initialized) {
 			int err = 0;
 			/* rsbac_pr_debug(auto, "calling rsbac_write()\n"); */
 			err = rsbac_write(FALSE);
