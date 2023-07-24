@@ -5688,7 +5688,6 @@ int vfs_rename(struct renamedata *rd)
 	}
 #endif
 
-
 	error = -EPERM;
 	if (IS_SWAPFILE(source) || (target && IS_SWAPFILE(target)))
 		goto out;
@@ -5735,10 +5734,6 @@ int vfs_rename(struct renamedata *rd)
 			d_exchange(old_dentry, new_dentry);
 	}
 out:
-	if (!is_dir || lock_old_subdir)
-		inode_unlock(source);
-	if (target && (!new_is_dir || lock_new_subdir))
-		inode_unlock(target);
 
 #ifdef CONFIG_RSBAC
 	if (!error && target_exists) {
@@ -5774,6 +5769,10 @@ out:
 	}
 #endif
 
+	if (!is_dir || lock_old_subdir)
+		inode_unlock(source);
+	if (target && (!new_is_dir || lock_new_subdir))
+		inode_unlock(target);
 	dput(new_dentry);
 	if (!error) {
 		fsnotify_move(old_dir, new_dir, &old_name.name, is_dir,
