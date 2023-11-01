@@ -4,9 +4,9 @@
 /* Facility (ADF) - JAIL module                      */
 /* File: rsbac/adf/jail/syscalls.c                   */
 /*                                                   */
-/* Author and (c) 1999-2020: Amon Ott <ao@rsbac.org> */
+/* Author and (c) 1999-2023: Amon Ott <ao@rsbac.org> */
 /*                                                   */
-/* Last modified: 29/Dec/2020                        */
+/* Last modified: 01/Nov/2023                        */
 /*************************************************** */
 
 #include <linux/string.h>
@@ -77,6 +77,7 @@ int rsbac_jail_sys_jail(rsbac_version_t version,
 	if (i_attr_val1.jail_id)
 	{ /* this process is already in a jail -> limit ip and flags */
 		parent = i_attr_val1.jail_id;
+		rsbac_pr_debug(aef_jail, "called from existing parent jail %u, limiting parameters\n", parent);
 		if (rsbac_get_attr(SW_JAIL,
 					T_PROCESS,
 					i_tid,
@@ -140,6 +141,8 @@ int rsbac_jail_sys_jail(rsbac_version_t version,
 
 		max_caps.cap[0] &= i_attr_val1.jail_max_caps.cap[0];
 		max_caps.cap[1] &= i_attr_val1.jail_max_caps.cap[1];
+	} else {
+		rsbac_pr_debug(aef_jail, "called without parent jail\n");
 	}
 
 	/* check syslog id */
@@ -218,7 +221,10 @@ restart:
 						MINOR(file->f_path.dentry->d_sb->s_dev),
 						filename);
 				if(filename)
+				{
+					rsbac_pr_debug(aef_jail, "starting program %s\n", filename);
 					rsbac_kfree(filename);
+				}
 
 				filp_close(file, files);
 				goto restart;
@@ -232,6 +238,7 @@ restart:
 	while (!i_attr_val1.jail_id || rsbac_jail_exists(i_attr_val1.jail_id))
 		i_attr_val1.jail_id = next_id++;
 
+	rsbac_pr_debug(aef_jail, "creating jail %u\n", i_attr_val1.jail_id);
 	if (rsbac_set_attr(SW_JAIL,
 				T_PROCESS,
 				i_tid,
