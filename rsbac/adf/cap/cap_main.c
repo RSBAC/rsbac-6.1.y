@@ -4,9 +4,9 @@
 /* Facility (ADF) - Linux Capabilities (CAP)          */
 /* File: rsbac/adf/cap/main.c                         */
 /*                                                    */
-/* Author and (c) 1999-2019: Amon Ott <ao@rsbac.org>  */
+/* Author and (c) 1999-2023: Amon Ott <ao@rsbac.org>  */
 /*                                                    */
-/* Last modified: 03/Dec/2019                         */
+/* Last modified: 14/Dec/2023                         */
 /**************************************************** */
 
 #include <linux/string.h>
@@ -472,12 +472,12 @@ inline int rsbac_adf_set_attr_cap(
                                     || ((override_cred->cap_effective.cap[1] | i_attr_val1.min_caps.cap[1]) != override_cred->cap_effective.cap[1])
                                     || ((override_cred->cap_inheritable.cap[1] | i_attr_val1.min_caps.cap[1]) != override_cred->cap_inheritable.cap[1])
 				   ) {
-                                	override_cred->cap_permitted.cap[0] |= i_attr_val1.max_caps.cap[0];
-					override_cred->cap_effective.cap[0] |= i_attr_val1.max_caps.cap[0];
-					override_cred->cap_inheritable.cap[0] |= i_attr_val1.max_caps.cap[0];
-					override_cred->cap_permitted.cap[1] |= i_attr_val1.max_caps.cap[1];
-					override_cred->cap_effective.cap[1] |= i_attr_val1.max_caps.cap[1];
-					override_cred->cap_inheritable.cap[1] |= i_attr_val1.max_caps.cap[1];
+                                	override_cred->cap_permitted.cap[0] |= i_attr_val1.min_caps.cap[0];
+					override_cred->cap_effective.cap[0] |= i_attr_val1.min_caps.cap[0];
+					override_cred->cap_inheritable.cap[0] |= i_attr_val1.min_caps.cap[0];
+					override_cred->cap_permitted.cap[1] |= i_attr_val1.min_caps.cap[1];
+					override_cred->cap_effective.cap[1] |= i_attr_val1.min_caps.cap[1];
+					override_cred->cap_inheritable.cap[1] |= i_attr_val1.min_caps.cap[1];
 					commit_creds(override_cred);
 				} else {
                                 	abort_creds(override_cred);
@@ -714,12 +714,12 @@ inline int rsbac_adf_set_attr_cap(
                                     || ((override_cred->cap_effective.cap[1] | i_attr_val1.min_caps.cap[1]) != override_cred->cap_effective.cap[1])
                                     || ((override_cred->cap_inheritable.cap[1] | i_attr_val1.min_caps.cap[1]) != override_cred->cap_inheritable.cap[1])
 				   ) {
-                                	override_cred->cap_permitted.cap[0] |= i_attr_val1.max_caps.cap[0];
-					override_cred->cap_effective.cap[0] |= i_attr_val1.max_caps.cap[0];
-					override_cred->cap_inheritable.cap[0] |= i_attr_val1.max_caps.cap[0];
-					override_cred->cap_permitted.cap[1] |= i_attr_val1.max_caps.cap[1];
-					override_cred->cap_effective.cap[1] |= i_attr_val1.max_caps.cap[1];
-					override_cred->cap_inheritable.cap[1] |= i_attr_val1.max_caps.cap[1];
+                                	override_cred->cap_permitted.cap[0] |= i_attr_val1.min_caps.cap[0];
+					override_cred->cap_effective.cap[0] |= i_attr_val1.min_caps.cap[0];
+					override_cred->cap_inheritable.cap[0] |= i_attr_val1.min_caps.cap[0];
+					override_cred->cap_permitted.cap[1] |= i_attr_val1.min_caps.cap[1];
+					override_cred->cap_effective.cap[1] |= i_attr_val1.min_caps.cap[1];
+					override_cred->cap_inheritable.cap[1] |= i_attr_val1.min_caps.cap[1];
 					commit_creds(override_cred);
 				} else {
                                 	abort_creds(override_cred);
@@ -813,12 +813,12 @@ inline int rsbac_adf_set_attr_cap(
                                     || ((override_cred->cap_effective.cap[1] | i_attr_val1.min_caps.cap[1]) != override_cred->cap_effective.cap[1])
                                     || ((override_cred->cap_inheritable.cap[1] | i_attr_val1.min_caps.cap[1]) != override_cred->cap_inheritable.cap[1])
 				   ) {
-                                	override_cred->cap_permitted.cap[0] |= i_attr_val1.max_caps.cap[0];
-					override_cred->cap_effective.cap[0] |= i_attr_val1.max_caps.cap[0];
-					override_cred->cap_inheritable.cap[0] |= i_attr_val1.max_caps.cap[0];
-					override_cred->cap_permitted.cap[1] |= i_attr_val1.max_caps.cap[1];
-					override_cred->cap_effective.cap[1] |= i_attr_val1.max_caps.cap[1];
-					override_cred->cap_inheritable.cap[1] |= i_attr_val1.max_caps.cap[1];
+                                	override_cred->cap_permitted.cap[0] |= i_attr_val1.min_caps.cap[0];
+					override_cred->cap_effective.cap[0] |= i_attr_val1.min_caps.cap[0];
+					override_cred->cap_inheritable.cap[0] |= i_attr_val1.min_caps.cap[0];
+					override_cred->cap_permitted.cap[1] |= i_attr_val1.min_caps.cap[1];
+					override_cred->cap_effective.cap[1] |= i_attr_val1.min_caps.cap[1];
+					override_cred->cap_inheritable.cap[1] |= i_attr_val1.min_caps.cap[1];
 					commit_creds(override_cred);
 				} else {
                                 	abort_creds(override_cred);
@@ -919,12 +919,12 @@ inline int rsbac_adf_set_attr_cap(
                                     || ((override_cred->cap_effective.cap[1] | i_attr_val1.min_caps.cap[1]) != override_cred->cap_effective.cap[1])
                                     || ((override_cred->cap_inheritable.cap[1] | i_attr_val1.min_caps.cap[1]) != override_cred->cap_inheritable.cap[1])
 				   ) {
-                                	override_cred->cap_permitted.cap[0] |= i_attr_val1.max_caps.cap[0];
-					override_cred->cap_effective.cap[0] |= i_attr_val1.max_caps.cap[0];
-					override_cred->cap_inheritable.cap[0] |= i_attr_val1.max_caps.cap[0];
-					override_cred->cap_permitted.cap[1] |= i_attr_val1.max_caps.cap[1];
-					override_cred->cap_effective.cap[1] |= i_attr_val1.max_caps.cap[1];
-					override_cred->cap_inheritable.cap[1] |= i_attr_val1.max_caps.cap[1];
+                                	override_cred->cap_permitted.cap[0] |= i_attr_val1.min_caps.cap[0];
+					override_cred->cap_effective.cap[0] |= i_attr_val1.min_caps.cap[0];
+					override_cred->cap_inheritable.cap[0] |= i_attr_val1.min_caps.cap[0];
+					override_cred->cap_permitted.cap[1] |= i_attr_val1.min_caps.cap[1];
+					override_cred->cap_effective.cap[1] |= i_attr_val1.min_caps.cap[1];
+					override_cred->cap_inheritable.cap[1] |= i_attr_val1.min_caps.cap[1];
 					commit_creds(override_cred);
 				} else {
                                 	abort_creds(override_cred);
