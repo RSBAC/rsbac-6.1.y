@@ -1,9 +1,9 @@
 /********************************** */
 /* Rule Set Based Access Control    */
-/* Author and (c) 1999-2021:        */
+/* Author and (c) 1999-2023:        */
 /*   Amon Ott <ao@rsbac.org>        */
 /* Getname functions for CAP module */
-/* Last modified: 04/Oct/2021       */
+/* Last modified: 18/Dec/2023       */
 /********************************** */
 
 #include <rsbac/getname.h>
@@ -32,11 +32,12 @@ rsbac_list_ta_number_t cap_learn_ta = CONFIG_RSBAC_CAP_LEARN_TA;
 #endif
 
 #if defined(CONFIG_RSBAC_CAP_LOG_MISSING) || defined(CONFIG_RSBAC_CAP_LEARN)
-void rsbac_cap_log_missing_cap(int cap)
+bool rsbac_cap_log_missing_cap(int cap)
   {
     char * tmp;
     union rsbac_target_id_t       i_tid;
     union rsbac_attribute_value_t i_attr_val1;
+    bool                          res = false;
 
 #ifdef CONFIG_RSBAC_CAP_LEARN_TA
     if (!rsbac_list_ta_exist(cap_learn_ta))
@@ -61,7 +62,7 @@ void rsbac_cap_log_missing_cap(int cap)
       {
         if(cap < 32)
           {
-            if(!(i_attr_val1.max_caps_user.cap[0] & (1 << cap)))
+            if(!(i_attr_val1.max_caps_user.cap[0] & BIT(cap)))
               {
 #if defined(CONFIG_RSBAC_CAP_LEARN)
                 if (rsbac_cap_learn)
@@ -78,7 +79,7 @@ void rsbac_cap_log_missing_cap(int cap)
                              cap_learn_ta);
                          rsbac_kfree(tmp);
                       }
-                    i_attr_val1.max_caps_user.cap[0] |= (1 << cap);
+                    i_attr_val1.max_caps_user.cap[0] |= BIT(cap);
 		    if (rsbac_ta_set_attr(cap_learn_ta,
 		                        SW_CAP,
 					T_PROCESS,
@@ -103,7 +104,7 @@ void rsbac_cap_log_missing_cap(int cap)
                       {
                         struct cred *override_cred;
 
-                        i_attr_val1.max_caps.cap[0] |= (1 << cap);
+                        i_attr_val1.max_caps.cap[0] |= BIT(cap);
  		        if (rsbac_ta_set_attr(cap_learn_ta,
  		                        SW_CAP,
 					T_USER,
@@ -117,8 +118,11 @@ void rsbac_cap_log_missing_cap(int cap)
 			  override_cred = prepare_creds();
 			  if (override_cred)
 			    {
-			      override_cred->cap_effective.cap[0] |= (1 << cap);
+			      override_cred->cap_permitted.cap[0] |= BIT(cap);
+			      override_cred->cap_effective.cap[0] |= BIT(cap);
+			      override_cred->cap_inheritable.cap[0] |= BIT(cap);
 			      commit_creds(override_cred);
+			      res = true;
                             }
                       }
                   }
@@ -142,7 +146,7 @@ void rsbac_cap_log_missing_cap(int cap)
           }
         else
           {
-            if(!(i_attr_val1.max_caps_user.cap[1] & (1 << (cap - 32))))
+            if(!(i_attr_val1.max_caps_user.cap[1] & BIT(cap - 32)))
               {
 #if defined(CONFIG_RSBAC_CAP_LEARN)
                 if (rsbac_cap_learn)
@@ -159,7 +163,7 @@ void rsbac_cap_log_missing_cap(int cap)
                              cap_learn_ta);
                          rsbac_kfree(tmp);
                       }
-                    i_attr_val1.max_caps_user.cap[1] |= (1 << (cap - 32));
+                    i_attr_val1.max_caps_user.cap[1] |= BIT(cap - 32);
 		    if (rsbac_ta_set_attr(cap_learn_ta,
 		                        SW_CAP,
 					T_PROCESS,
@@ -184,7 +188,7 @@ void rsbac_cap_log_missing_cap(int cap)
                       {
 			struct cred *override_cred;
 
-                        i_attr_val1.max_caps.cap[1] |= (1 << (cap - 32));
+                        i_attr_val1.max_caps.cap[1] |= BIT(cap - 32);
  		        if (rsbac_ta_set_attr(cap_learn_ta,
  		                        SW_CAP,
 					T_USER,
@@ -198,8 +202,11 @@ void rsbac_cap_log_missing_cap(int cap)
 			  override_cred = prepare_creds();
 			  if (override_cred)
 			    {
-			      override_cred->cap_effective.cap[1] |= (1 << (cap - 32));
+			      override_cred->cap_permitted.cap[1] |= BIT(cap - 32);
+			      override_cred->cap_effective.cap[1] |= BIT(cap - 32);
+			      override_cred->cap_inheritable.cap[1] |= BIT(cap - 32);
 			      commit_creds(override_cred);
+			      res = true;
                             }
                       }
                   }
@@ -238,14 +245,14 @@ void rsbac_cap_log_missing_cap(int cap)
       {
         if(cap < 32)
           {
-            if(!(i_attr_val1.max_caps_program.cap[0] & (1 << cap)))
+            if(!(i_attr_val1.max_caps_program.cap[0] & BIT(cap)))
               {
 #if defined(CONFIG_RSBAC_CAP_LEARN)
                 if (rsbac_cap_learn)
                   {
                     struct file *file_p;
 
-                    i_attr_val1.max_caps_program.cap[0] |= (1 << cap);
+                    i_attr_val1.max_caps_program.cap[0] |= BIT(cap);
 		    if (rsbac_ta_set_attr(cap_learn_ta,
 		                        SW_CAP,
 					T_PROCESS,
@@ -298,7 +305,7 @@ void rsbac_cap_log_missing_cap(int cap)
                           {
 			    struct cred *override_cred;
 
-                            i_attr_val1.max_caps.cap[0] |= (1 << cap);
+                            i_attr_val1.max_caps.cap[0] |= BIT(cap);
  		            if (rsbac_ta_set_attr(cap_learn_ta,
  		                        SW_CAP,
 					T_FILE,
@@ -312,8 +319,11 @@ void rsbac_cap_log_missing_cap(int cap)
 			    override_cred = prepare_creds();
 			    if (override_cred)
 			      {
-			        override_cred->cap_effective.cap[0] |= (1 << cap);
+			        override_cred->cap_permitted.cap[0] |= BIT(cap);
+			        override_cred->cap_effective.cap[0] |= BIT(cap);
+			        override_cred->cap_inheritable.cap[0] |= BIT(cap);
 			        commit_creds(override_cred);
+			        res = true;
                               }
                           }
                       }
@@ -340,14 +350,14 @@ void rsbac_cap_log_missing_cap(int cap)
           }
         else
           {
-            if(!(i_attr_val1.max_caps_program.cap[1] & (1 << (cap - 32))))
+            if(!(i_attr_val1.max_caps_program.cap[1] & BIT(cap - 32)))
               {
 #if defined(CONFIG_RSBAC_CAP_LEARN)
                 if (rsbac_cap_learn)
                   {
                     struct file *file_p;
 
-                    i_attr_val1.max_caps_program.cap[1] |= (1 << (cap - 32));
+                    i_attr_val1.max_caps_program.cap[1] |= BIT(cap - 32);
 		    if (rsbac_ta_set_attr(cap_learn_ta,
 		                        SW_CAP,
 					T_PROCESS,
@@ -400,7 +410,7 @@ void rsbac_cap_log_missing_cap(int cap)
                           {
 			    struct cred *override_cred;
 
-                            i_attr_val1.max_caps.cap[1] |= (1 << (cap - 32));
+                            i_attr_val1.max_caps.cap[1] |= BIT(cap - 32);
  		            if (rsbac_ta_set_attr(cap_learn_ta,
  		                        SW_CAP,
 					T_FILE,
@@ -414,8 +424,11 @@ void rsbac_cap_log_missing_cap(int cap)
 				override_cred = prepare_creds();
 				if (override_cred)
 				    {
-				      override_cred->cap_effective.cap[1] |= (1 << (cap - 32));
+				      override_cred->cap_permitted.cap[1] |= BIT(cap - 32);
+				      override_cred->cap_effective.cap[1] |= BIT(cap - 32);
+				      override_cred->cap_inheritable.cap[1] |= BIT(cap - 32);
 				      commit_creds(override_cred);
+				      res = true;
                                     }
                           }
                       }
@@ -441,5 +454,6 @@ void rsbac_cap_log_missing_cap(int cap)
               }
           }
       }
+    return res;
   }
 #endif
