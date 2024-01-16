@@ -2476,7 +2476,7 @@ int sys_rsbac_rc_copy_role(
 
 int sys_rsbac_rc_copy_type(
         rsbac_list_ta_number_t ta_number,
-  enum  rsbac_rc_target_t      target,
+  enum  rsbac_target_t         target,
         rsbac_rc_type_id_t     from_type,
         rsbac_rc_type_id_t     to_type)
   {
