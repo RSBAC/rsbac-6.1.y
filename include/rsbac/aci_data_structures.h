@@ -1,8 +1,8 @@
 /**************************************/
 /* Rule Set Based Access Control      */
-/* Author and (c) 1999-2021: Amon Ott */
+/* Author and (c) 1999-2024: Amon Ott */
 /* Data structures                    */
-/* Last modified: 09/Nov/2021         */
+/* Last modified: 29/Jul/2024         */
 /**************************************/
 
 #ifndef __RSBAC_DATA_STRUC_H
@@ -1108,7 +1108,6 @@ struct rsbac_auth_process_aci_t {
 #define RSBAC_CAP_PROCESS_ACI_VERSION 2
 #define RSBAC_CAP_PROCESS_ACI_KEY 10013283
 struct rsbac_cap_process_aci_t {
-	rsbac_cap_process_hiding_int_t cap_process_hiding;
 #if defined(CONFIG_RSBAC_CAP_LOG_MISSING) || defined(CONFIG_RSBAC_CAP_LEARN)
 	rsbac_cap_vector_t max_caps_user;
 	rsbac_cap_vector_t max_caps_program;
@@ -1119,7 +1118,6 @@ struct rsbac_cap_process_aci_t {
 #ifdef CONFIG_RSBAC_CAP_LOG_MISSING
 #define DEFAULT_CAP_P_ACI \
     { \
-      .cap_process_hiding = PH_off, \
       .max_caps_user.cap[0] = RSBAC_CAP_DEFAULT_MAX, \
       .max_caps_user.cap[1] = RSBAC_CAP_DEFAULT_MAX, \
       .max_caps_program.cap[0] = RSBAC_CAP_DEFAULT_MAX, \
@@ -1129,7 +1127,6 @@ struct rsbac_cap_process_aci_t {
 #else
 #define DEFAULT_CAP_P_ACI \
     { \
-      .cap_process_hiding = PH_off, \
       .cap_ld_env = LD_allow, \
     }
 #endif
@@ -1172,7 +1169,7 @@ struct rsbac_udf_process_aci_t {
     }
 #endif
 
-#define RSBAC_PROCESS_NR_ATTRIBUTES 38
+#define RSBAC_PROCESS_NR_ATTRIBUTES 37
 #define RSBAC_PROCESS_ATTR_LIST { \
       A_security_level, \
       A_min_security_level, \
@@ -1193,7 +1190,6 @@ struct rsbac_udf_process_aci_t {
       A_auth_may_setuid, \
       A_auth_may_set_cap, \
       A_auth_learn, \
-      A_cap_process_hiding, \
       A_max_caps_user, \
       A_max_caps_program, \
       A_cap_ld_env, \

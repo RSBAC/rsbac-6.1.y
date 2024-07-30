@@ -1,8 +1,8 @@
 /************************************* */
 /* Rule Set Based Access Control       */
-/* Author and (c) 1999-2021: Amon Ott  */
+/* Author and (c) 1999-2024: Amon Ott  */
 /* Helper functions for all parts      */
-/* Last modified:  04/Oct/2021         */
+/* Last modified:  29/Jul/2024         */
 /************************************* */
 
 #ifndef __RSBAC_HELPER_H
@@ -42,7 +42,7 @@ static inline rsbac_um_set_t rsbac_get_vset(void)
   }
 #endif
 
-int rsbac_get_owner(rsbac_uid_t * user_p);
+void rsbac_get_owner(rsbac_uid_t * user_p);
 
 static inline int rsbac_get_user(void * kern_p, void __user * user_p, int size)
   {
