@@ -24,7 +24,7 @@
 
 #ifdef CONFIG_RSBAC
 #include <net/sock.h>
-#ifdef CONFIG_RSBAC_FSOBJ_HIDE
+#if defined(CONFIG_RSBAC_FSOBJ_HIDE) || defined(CONFIG_RSBAC_CAP_FD_HIDE)
 #include "hfsplus/hfsplus_fs.h"
 #include "hfsplus/hfsplus_raw.h"
 #endif
@@ -171,7 +171,7 @@ struct old_linux_dirent {
 struct readdir_callback {
 	struct dir_context ctx;
 	struct old_linux_dirent __user * dirent;
-#ifdef CONFIG_RSBAC_FSOBJ_HIDE
+#if defined(CONFIG_RSBAC_FSOBJ_HIDE) || defined(CONFIG_RSBAC_CAP_FD_HIDE)
 	struct file * file;
 #endif
 	int result;
@@ -190,16 +190,18 @@ static bool fillonedir(struct dir_context *ctx, const char *name, int namlen,
 	buf->result = verify_dirent_name(name, namlen);
 	if (buf->result)
 		return false;
-#ifdef CONFIG_RSBAC_FSOBJ_HIDE
-	if (!rsbac_handle_filldir(buf->file, name, namlen, ino))
-		return 0;
-#endif
-
 	d_ino = ino;
 	if (sizeof(d_ino) < sizeof(ino) && d_ino != ino) {
 		buf->result = -EOVERFLOW;
 		return false;
 	}
+
+#if defined(CONFIG_RSBAC_FSOBJ_HIDE) || defined(CONFIG_RSBAC_CAP_FD_HIDE)
+	if (!rsbac_handle_filldir(buf->file, name, namlen, ino)) {
+		return true;
+	}
+#endif
+
 	buf->result++;
 	dirent = buf->dirent;
 	if (!user_write_access_begin(dirent,
@@ -232,7 +234,7 @@ SYSCALL_DEFINE3(old_readdir, unsigned int, fd,
 	if (!f.file)
 		return -EBADF;
 
-#ifdef CONFIG_RSBAC_FSOBJ_HIDE
+#if defined(CONFIG_RSBAC_FSOBJ_HIDE) || defined(CONFIG_RSBAC_CAP_FD_HIDE)
 	buf.file = f.file;
 #endif
 
@@ -261,7 +263,7 @@ struct getdents_callback {
 	struct dir_context ctx;
 	struct linux_dirent __user * current_dir;
 	int prev_reclen;
-#ifdef CONFIG_RSBAC_FSOBJ_HIDE
+#if defined(CONFIG_RSBAC_FSOBJ_HIDE) || defined(CONFIG_RSBAC_CAP_FD_HIDE)
 	struct file * file;
 #endif
 	int count;
@@ -285,10 +287,6 @@ static bool filldir(struct dir_context *ctx, const char *name, int namlen,
 	buf->error = -EINVAL;	/* only used if we fail.. */
 	if (reclen > buf->count)
 		return false;
-#ifdef CONFIG_RSBAC_FSOBJ_HIDE
-	if (!rsbac_handle_filldir(buf->file, name, namlen, ino))
-		return 0;
-#endif
 	d_ino = ino;
 	if (sizeof(d_ino) < sizeof(ino) && d_ino != ino) {
 		buf->error = -EOVERFLOW;
@@ -297,6 +295,13 @@ static bool filldir(struct dir_context *ctx, const char *name, int namlen,
 	prev_reclen = buf->prev_reclen;
 	if (prev_reclen && signal_pending(current))
 		return false;
+
+#if defined(CONFIG_RSBAC_FSOBJ_HIDE) || defined(CONFIG_RSBAC_CAP_FD_HIDE)
+	if (!rsbac_handle_filldir(buf->file, name, namlen, ino)) {
+		return true;
+	}
+#endif
+
 	dirent = buf->current_dir;
 	prev = (void __user *) dirent - prev_reclen;
 	if (!user_write_access_begin(prev, reclen + prev_reclen))
@@ -336,7 +341,7 @@ SYSCALL_DEFINE3(getdents, unsigned int, fd,
 	if (!f.file)
 		return -EBADF;
 
-#ifdef CONFIG_RSBAC_FSOBJ_HIDE
+#if defined(CONFIG_RSBAC_FSOBJ_HIDE) || defined(CONFIG_RSBAC_CAP_FD_HIDE)
 	buf.file = f.file;
 #endif
 
@@ -362,7 +367,7 @@ struct getdents_callback64 {
 	int prev_reclen;
 	int count;
 	int error;
-#ifdef CONFIG_RSBAC_FSOBJ_HIDE
+#if defined(CONFIG_RSBAC_FSOBJ_HIDE) || defined(CONFIG_RSBAC_CAP_FD_HIDE)
 	struct file * file;
 #endif
 };
@@ -383,15 +388,16 @@ static bool filldir64(struct dir_context *ctx, const char *name, int namlen,
 	buf->error = -EINVAL;	/* only used if we fail.. */
 	if (reclen > buf->count)
 		return false;
-
-#ifdef CONFIG_RSBAC_FSOBJ_HIDE
-	if (!rsbac_handle_filldir(buf->file, name, namlen, ino))
-		return 0;
-#endif
-
 	prev_reclen = buf->prev_reclen;
 	if (prev_reclen && signal_pending(current))
 		return false;
+
+#if defined(CONFIG_RSBAC_FSOBJ_HIDE) || defined(CONFIG_RSBAC_CAP_FD_HIDE)
+	if (!rsbac_handle_filldir(buf->file, name, namlen, ino)) {
+		return true;
+	}
+#endif
+
 	dirent = buf->current_dir;
 	prev = (void __user *)dirent - prev_reclen;
 	if (!user_write_access_begin(prev, reclen + prev_reclen))
@@ -432,7 +438,7 @@ SYSCALL_DEFINE3(getdents64, unsigned int, fd,
 	if (!f.file)
 		return -EBADF;
 
-#ifdef CONFIG_RSBAC_FSOBJ_HIDE
+#if defined(CONFIG_RSBAC_FSOBJ_HIDE) || defined(CONFIG_RSBAC_CAP_FD_HIDE)
 	buf.file = f.file;
 #endif
 
