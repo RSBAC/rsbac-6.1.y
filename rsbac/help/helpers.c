@@ -513,6 +513,9 @@ rsbac_boolean_t rsbac_cap_hide_fd(struct dentry * target_dentry)
 #endif
 		return FALSE;
 	}
+
+	if (uid_eq(target_dentry->d_inode->i_uid, current_fsuid()))
+		return FALSE;
 	if (!generic_permission(&init_user_ns, target_dentry->d_inode, MAY_READ))
 		return FALSE;
 
