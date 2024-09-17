@@ -3,7 +3,7 @@
 /* Author and (c) 1999-2024:           */
 /*   Amon Ott <ao@rsbac.org>           */
 /* Helper functions for all parts      */
-/* Last modified: 22/Aug/2024          */
+/* Last modified: 17/Sep/2024          */
 /************************************* */
 
 #include <rsbac/types.h>
@@ -512,10 +512,14 @@ rsbac_boolean_t rsbac_cap_hide_fd(struct inode * target_inode)
 	if (unlikely(target_inode->i_sb->s_magic == CEPH_SUPER_MAGIC && target_inode->i_op && target_inode->i_op->permission)) {
 		if (!target_inode->i_op->permission(&init_user_ns, target_inode, MAY_READ))
 			return FALSE;
+		if (!target_inode->i_op->permission(&init_user_ns, target_inode, MAY_EXEC))
+			return FALSE;
 		if (!target_inode->i_op->permission(&init_user_ns, target_inode, MAY_WRITE))
 			return FALSE;
 	} else {
 		if (!generic_permission(&init_user_ns, target_inode, MAY_READ))
+			return FALSE;
+		if (!generic_permission(&init_user_ns, target_inode, MAY_EXEC))
 			return FALSE;
 		if (!generic_permission(&init_user_ns, target_inode, MAY_WRITE))
 			return FALSE;
