@@ -292,12 +292,12 @@ __vfs_setxattr_locked(struct user_namespace *mnt_userns, struct dentry *dentry,
 	rsbac_target_id.file.device = dentry->d_sb->s_dev;
 	rsbac_target_id.file.inode  = inode->i_ino;
 	rsbac_target_id.file.dentry_p = dentry;
-	rsbac_attribute_value.dummy = 0;
+	rsbac_attribute_value.xattr_name = name;
 	if (!rsbac_adf_request(R_MODIFY_XATTR,
 				task_pid(current),
 				rsbac_target,
 				rsbac_target_id,
-				A_none,
+				A_xattr_name,
 				rsbac_attribute_value)) {
 		error = -EPERM;
 		goto out;
@@ -477,12 +477,12 @@ vfs_getxattr(struct user_namespace *mnt_userns, struct dentry *dentry,
 	rsbac_target_id.file.device = dentry->d_sb->s_dev;
 	rsbac_target_id.file.inode  = inode->i_ino;
 	rsbac_target_id.file.dentry_p = dentry;
-	rsbac_attribute_value.dummy = 0;
+	rsbac_attribute_value.xattr_name = name;
 	if (!rsbac_adf_request(R_GET_XATTR,
 				task_pid(current),
 				rsbac_target,
 				rsbac_target_id,
-				A_none,
+				A_xattr_name,
 				rsbac_attribute_value)) {
 		return -EPERM;
 	}
@@ -624,12 +624,12 @@ __vfs_removexattr_locked(struct user_namespace *mnt_userns,
 	rsbac_target_id.file.device = dentry->d_sb->s_dev;
 	rsbac_target_id.file.inode  = inode->i_ino;
 	rsbac_target_id.file.dentry_p = dentry;
-	rsbac_attribute_value.dummy = 0;
+	rsbac_attribute_value.xattr_name = name;
 	if (!rsbac_adf_request(R_MODIFY_XATTR,
 				task_pid(current),
 				rsbac_target,
 				rsbac_target_id,
-				A_none,
+				A_xattr_name,
 				rsbac_attribute_value)) {
 		error = -EPERM;
 		goto out;
