@@ -6,7 +6,7 @@
 /*                                                   */
 /* Author and (c) 1999-2024: Amon Ott <ao@rsbac.org> */
 /*                                                   */
-/* Last modified: 20/Sep/2024                        */
+/* Last modified: 14/Nov/2024                        */
 /*************************************************** */
 
 #include <linux/string.h>
@@ -1279,6 +1279,7 @@ rsbac_adf_request_rc(enum rsbac_adf_request_t request,
 	case R_MAP_EXEC:
 		switch (target) {
 		case T_FILE:
+		case T_IPC:
 			return check_comp_rc
 				(target, tid, request, caller_pid);
 		case T_NONE:
@@ -2412,6 +2413,7 @@ rsbac_adf_request_rc(enum rsbac_adf_request_t request,
 		case T_FIFO:
 		case T_SYMLINK:
 		case T_UNIXSOCK:
+		case T_IPC:
 		case T_DEV:
 			return check_comp_rc
 				(target, tid, request, caller_pid);
@@ -2487,6 +2489,7 @@ rsbac_adf_request_rc(enum rsbac_adf_request_t request,
 	case R_TRUNCATE:
 		switch (target) {
 		case T_FILE:
+		case T_IPC:
 			return check_comp_rc
 				(target, tid, request, caller_pid);
 
