@@ -1004,33 +1004,33 @@ struct mm_struct *proc_mem_open(struct inode *inode, unsigned int mode)
 		return ERR_PTR(-ESRCH);
 
 #ifdef CONFIG_RSBAC
-        enum  rsbac_adf_request_t rsbac_adf_req;
+	enum  rsbac_adf_request_t rsbac_adf_req;
 	union rsbac_target_id_t rsbac_target_id;
 	union rsbac_attribute_value_t rsbac_attribute_value;
 #endif
 
 
 #ifdef CONFIG_RSBAC
-		rsbac_pr_debug(aef, "calling ADF\n");
-		if (mode & PTRACE_MODE_ATTACH)
-		        rsbac_adf_req = R_TRACE;
-	        else
-		        rsbac_adf_req = R_GET_STATUS_DATA;
-		rsbac_target_id.process = get_task_pid(task, PIDTYPE_PID);
-		if (rsbac_target_id.process) {
-			rsbac_attribute_value.dummy = 0;
-			if (!rsbac_adf_request(rsbac_adf_req,
-						task_pid(current),
-						T_PROCESS,
-						rsbac_target_id,
-						A_none,
-						rsbac_attribute_value)) {
-				put_pid(rsbac_target_id.process);
-				put_task_struct(task);
-				return ERR_PTR(-EPERM);
-			}
+	rsbac_pr_debug(aef, "calling ADF\n");
+	if (mode & PTRACE_MODE_ATTACH)
+		rsbac_adf_req = R_TRACE;
+        else
+		rsbac_adf_req = R_GET_STATUS_DATA;
+	rsbac_target_id.process = get_task_pid(task, PIDTYPE_PID);
+	if (rsbac_target_id.process) {
+		rsbac_attribute_value.dummy = 0;
+		if (!rsbac_adf_request(rsbac_adf_req,
+					task_pid(current),
+					T_PROCESS,
+					rsbac_target_id,
+					A_none,
+					rsbac_attribute_value)) {
 			put_pid(rsbac_target_id.process);
+			put_task_struct(task);
+			return ERR_PTR(-EPERM);
 		}
+		put_pid(rsbac_target_id.process);
+	}
 #endif
 
 	mm = mm_access(task, mode | PTRACE_MODE_FSCREDS);
@@ -1696,7 +1696,6 @@ static ssize_t proc_loginuid_write(struct file * file, const char __user * buf,
 		return -EINVAL;
 	}
 
-
 #ifdef CONFIG_RSBAC
 	rsbac_pr_debug(aef, "calling ADF\n");
 	rsbac_target_id.process = proc_pid(inode);
@@ -2152,7 +2151,6 @@ static int proc_exe_link(struct dentry *dentry, struct path *exe_path,
 	union rsbac_attribute_value_t rsbac_attribute_value;
 #endif
 
-
 #ifdef CONFIG_RSBAC
 	rsbac_pr_debug(aef, "calling ADF\n");
 	rsbac_target_id.process = get_task_pid(task, PIDTYPE_PID);
@@ -2165,7 +2163,6 @@ static int proc_exe_link(struct dentry *dentry, struct path *exe_path,
 					A_none,
 					rsbac_attribute_value)) {
 			put_pid(rsbac_target_id.process);
-			put_task_struct(task);
 			return -EPERM;
 		}
 		put_pid(rsbac_target_id.process);
